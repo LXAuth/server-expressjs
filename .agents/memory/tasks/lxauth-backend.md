@@ -88,3 +88,27 @@ Created this record, the memory index, and `.agents/memory/decisions/`. The
 repository was empty apart from `LICENSE` at `71e06c0`, so nothing in this task
 constrained the task list — the handoff's list stands as written. Nothing is built
 yet; that is the point of writing this first.
+
+### Task 2 — feat/express-scaffold
+
+Package manifest, strict TS config, `prisma.config.ts`, `.env.example`, the config
+module, the enum value sets, the JSON logger, the error envelope, the request-id
+and error middleware, the Express bootstrap, the route mount point, the Prisma
+client singleton, and graceful shutdown.
+
+`PROD` is opt-in: only the literal string `"true"` is production, so unset, empty,
+`"1"`, and `"yes"` are all development. A missing variable cannot select
+production.
+
+Two things a later task should know:
+
+* **`src/lib/prisma.ts` imports `@prisma/client`, which does not exist until task
+  3 runs `prisma generate`.** So the project does not typecheck at the end of this
+  task, and claiming otherwise would be claiming a check nobody ran. Task 3 is
+  what makes `tsc` meaningful; task 2's own files are complete regardless.
+* **`src/routes/index.ts` mounts nothing yet.** Tasks 4 through 9 each add one
+  `router.use` line there, which is why they sequence rather than parallelise.
+
+The error envelope is the contract every later handler codes against: throw an
+`ApiError`, and `errorHandler` is the only thing that writes a status. No handler
+in tasks 4 through 9 should set a status code directly.
