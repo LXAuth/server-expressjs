@@ -183,3 +183,28 @@ Two things later tasks should know:
   password change.
 * **`AccessTokenClaims` now carries `exp`.** `verify-token` reports the token's
   real expiry from that claim rather than recomputing one.
+
+### Task 5 — feat/users
+
+Register, me get/update, password change, organization listing, emails with
+verification, and addresses.
+
+Three decisions worth keeping:
+
+* **`PUT /users/me/password` revokes every session.** A password change that
+  leaves old refresh tokens alive is not a password change. The response reports
+  how many sessions *remain*, because the caller's own session is among those
+  revoked and it can no longer use the old token to discover that.
+* **`POST /users/me/emails` has no `isPrimary` field, deliberately.** An
+  unverified address cannot be primary — otherwise an account could demote its
+  real address in favour of an unverified one and lock itself out. Promotion is
+  its own endpoint and requires `isVerified`.
+* **`POST /users/me/emails/verify` is an addition to the specified paths.** There
+  is no mail transport in this build, so `register` and `addEmail` return the
+  verification token in the response. An endpoint that produces a token with no
+  way to redeem it would leave verification unreachable, so this was added rather
+  than left broken. In a deployment with mail it becomes the link target.
+
+Registration writes the account, primary email, credentials, and free membership
+in one transaction — all four or none, since an account with no credentials
+cannot log in and one with no email cannot be verified.

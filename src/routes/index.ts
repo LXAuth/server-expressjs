@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authRoutes } from '../modules/auth/auth.routes.js';
+import { userRoutes } from '../modules/users/user.routes.js';
 
 /**
  * The single mount point for every route, under `/api/v1`.
@@ -12,8 +13,8 @@ export function registerRoutes(): Router {
   const router = Router();
 
   router.use('/auth', authRoutes());
+  router.use('/users', userRoutes());
 
-  // router.use('/users',          userRoutes)          // task 5
   // router.use('/organizations', organizationRoutes)  // task 6
   // router.use('/accounts',       accountRoutes)       // tasks 8 and 9
 
