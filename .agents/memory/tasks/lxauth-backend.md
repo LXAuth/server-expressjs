@@ -208,3 +208,43 @@ Three decisions worth keeping:
 Registration writes the account, primary email, credentials, and free membership
 in one transaction — all four or none, since an account with no credentials
 cannot log in and one with no email cannot be verified.
+
+### Task 6 — feat/organizations
+
+Organization CRUD, member listing with pagination, invite/join, role updates, and
+member removal.
+
+**How the owner invariant is actually held.** `one_owner_per_org` from task 3 is
+the guarantee; the code here only produces good errors. Two places depend on the
+ordering that index forces:
+
+* *Creating* an organization writes the creator's `owner` row in the same
+  transaction. Splitting them leaves a window where the organization exists with
+  no owner, which is unrecoverable — the index permits zero owners as readily as
+  two, and nothing else can repair it.
+* *Promoting* to owner demotes the current owner to `co_owner` first, then
+  promotes, both in one transaction. Demotion must come first because the
+  intermediate state of two owners would fail inside the transaction too.
+
+Two concurrent promotions both read "current owner is X", both try to demote X
+and promote their own target; the transactions serialise and the loser's insert
+violates the index, which surfaces as a `last_owner` 409 rather than a 500.
+
+**Other decisions:**
+
+* **An invite cannot grant `owner`** — the schema excludes it. Ownership
+  transfers by promoting an existing member, which goes through the index.
+* **`join` requires the redeeming account to hold a verified copy of the invited
+  email.** Without that check a leaked invite link is a transferable membership.
+* **Admins cannot escalate.** An admin may not invite or promote to `admin`,
+  `co_owner`, or `owner`, and may not remove a peer.
+* **`DELETE /organizations` is a soft delete** — status becomes `deleted` rather
+  than the row going away, because audit rows elsewhere reference account ids.
+* **No `description` field on organizations.** The specified DDL gives an
+  organization none — only `organization_teams` has one — and the brief says not
+  to restructure the specified tables. Accepting a field and discarding it would
+  be worse than refusing it, so it is not in the contract. Adding it needs a
+  migration, which is the owner's call.
+
+**Task 7 must mount `/:org_id/teams` before the `/:org_id` routes**, or Express
+will let `/:org_id` swallow `/12/teams`.
