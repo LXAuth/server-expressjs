@@ -248,3 +248,23 @@ violates the index, which surfaces as a `last_owner` 409 rather than a 500.
 
 **Task 7 must mount `/:org_id/teams` before the `/:org_id` routes**, or Express
 will let `/:org_id` swallow `/12/teams`.
+
+### Task 7 — feat/teams
+
+Team CRUD plus team membership, mounted at `/:org_id/teams` from the organization
+router as task 6 required.
+
+Two checks worth keeping:
+
+* **Every operation confirms the team belongs to the organization in the path.**
+  A bare `findUnique` on the team id would let `GET /organizations/1/teams/7`
+  return a team belonging to organization 2 — a cross-tenant read that only the
+  `organizationId` filter prevents.
+* **Adding someone to a team requires organization membership first.** A team is
+  a grouping inside an organization; a team member who is not an organization
+  member would hold no role in the owning organization, so their access token
+  would grant nothing.
+
+A team's `role` column is free-text `VARCHAR(50)` in the specified DDL, not an
+enum, so unlike organization roles it has no set in `src/lib/enums.ts`. It is
+constrained to `member | lead` in the request schema and defaults to `member`.
