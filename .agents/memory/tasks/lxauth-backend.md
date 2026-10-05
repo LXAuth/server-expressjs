@@ -268,3 +268,66 @@ Two checks worth keeping:
 A team's `role` column is free-text `VARCHAR(50)` in the specified DDL, not an
 enum, so unlike organization roles it has no set in `src/lib/enums.ts`. It is
 constrained to `member | lead` in the request schema and defaults to `member`.
+
+### Task 8 — Web3
+
+The wallet login handshake and wallet management.
+
+**The endpoints exist and refuse to work. Signature verification is not
+implemented.** Recovering a signer's public key from an ECDSA signature requires
+secp256k1 point arithmetic, and no secp256k1 library is installed — the build
+environment has no network egress, so `ethers` or `@noble/curves` could not be
+added. Hand-writing it would mean a few hundred lines of security-critical
+elliptic curve code whose worst failure mode is accepting a forged signature, so
+it is absent rather than guessed at.
+
+What that means concretely: **every web3 endpoint answers 503
+`signature_unavailable`**, including `POST /auth/web3/nonce`, which refuses before
+handing out a challenge the client could never redeem. Nothing in this group has
+been exercised end to end and no claim is made about it working.
+
+**What is complete and reviewable:** keccak256 (not SHA-3 — different padding),
+the EIP-191 personal-sign framing, address normalisation, and signature format
+validation including the EIP-2 low-`s` rule. `recoverSigner` is an injected
+`RecoveryFn` with no implementation installed. To finish this: add `ethers` or
+`@noble/curves`, then implement `RecoveryFn` and call `setRecoveryFn` once at
+boot in `src/server.ts`. Nothing else changes.
+
+**Single-use is in the database, not the handler.** `consumeNonce` is an
+`updateMany` with `consumedAt: null` in the filter, so two concurrent requests
+carrying the same valid signature produce one winner — the second matches no row.
+A read-then-write would let both proceed.
+
+**The signing address is recovered, not trusted.** Login looks the account up
+from the address the signature recovers, never from the request body. Ordering it
+the other way would let anyone holding any private key log in as any account.
+
+**Login and bind challenges are different and not interchangeable.** A login
+challenge stores `account_id: null` because there is no account yet; a bind
+challenge names the account it is for. Login refuses a challenge with an account
+id, and bind refuses one without, so a signature collected in one flow cannot be
+redeemed in the other. Both messages are rebuilt from stored state at verification
+time — a client cannot supply the text it signed.
+
+**Wallet authorization is per-account, and centralised in
+`requireWalletAdmin`.** `wallets.account_id` points at `accounts`, which is
+polymorphic, so "may this caller act here?" cannot be answered from the token.
+A user account admits only its owner — not even an administrator. An organization
+account admits `co_owner` and above: `admin` is deliberately below the bar,
+because binding a wallet is how an organization proves who controls it and that
+should rank with moving its money.
+
+**`walletAddress` was removed from the register schema.** Task 5 accepted it and
+ignored it. A bind signature covers the account id, which does not exist until
+registration runs, so honouring it would mean binding without that signature.
+Register, then bind.
+
+Three things to know:
+
+* **`keccak256` is hand-written** and therefore unverified. It has known test
+  vectors; they are in task 10's suite as a pure unit test with no database.
+* **`/wallets/nonce` requires `address`.** An earlier draft built the message with
+  a placeholder, which is text the client cannot usefully sign.
+* **Removing the primary wallet promotes the oldest remaining one**, so an account
+  is never left holding wallets with none of them primary. Removing the last wallet
+  is allowed — refusing would leave an account permanently unbindable.

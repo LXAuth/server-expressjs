@@ -106,6 +106,17 @@ export const config = {
     baseUrl: read('APP_BASE_URL') ?? 'http://localhost:3000',
   },
 
+  web3: {
+    /**
+     * The domain that goes into the signable message. It has to be stable and
+     * client-visible, because a signature is only replay-proof if the domain
+     * it was signed against matches the one the server rebuilds.
+     */
+    domain: read('WEB3_DOMAIN') ?? 'lxauth.local',
+    /** A login nonce is short-lived: it only has to survive one wallet prompt. */
+    nonceTtlSeconds: readInt('WEB3_NONCE_TTL', 300),
+  },
+
   log: {
     level: read('LOG_LEVEL') ?? (prod ? 'info' : 'debug'),
   },

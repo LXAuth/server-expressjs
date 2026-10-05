@@ -12,18 +12,20 @@ const nameId = z
   .regex(/^@[a-z0-9_]{2,30}$/, 'Must be @ followed by 2-30 lowercase letters, digits, or underscores.');
 const nameDisplay = z.string().trim().min(1).max(100);
 
+/**
+ * No `walletAddress` here, unlike earlier drafts of this schema.
+ *
+ * Binding a wallet requires signing a message that names the account id, and
+ * that id does not exist until registration has run. Accepting the field would
+ * mean either ignoring it or binding without a signature over the account it
+ * lands on. The honest sequence is register, then
+ * `POST /accounts/{account_id}/wallets/nonce` followed by `/wallets/bind`.
+ */
 export const registerSchema = z.object({
   email,
   password: z.string().min(12).max(256),
   nameId,
   nameDisplay: nameDisplay.optional(),
-  /** A wallet address to bind at signup. Requires a signature, added in task 8. */
-  walletAddress: z
-    .string()
-    .trim()
-    .regex(/^0x[a-fA-F0-9]{40}$/, 'Must be a 0x-prefixed 20-byte hex address.')
-    .optional(),
-  signature: z.string().trim().max(1024).optional(),
 });
 
 export const updateMeSchema = z

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as controller from './auth.controller.js';
+import { web3Routes } from '../web3/web3.routes.js';
 
 /**
  * Auth and session routes, mounted at `/api/v1/auth`.
@@ -18,9 +19,9 @@ export function authRoutes(): Router {
   router.post('/logout', controller.logout);
   router.post('/verify-token', controller.verifyToken);
 
-  // The web3 handshake arrives in task 8:
-  //   router.post('/web3/nonce', controller.web3Nonce);
-  //   router.post('/web3/login', controller.web3Login);
+  // Unauthenticated, like `/login`: a wallet is signing in, so there is no token
+  // to present yet.
+  router.use('/web3', web3Routes());
 
   return router;
 }

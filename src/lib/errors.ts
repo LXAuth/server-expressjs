@@ -25,6 +25,7 @@ export type ErrorCode =
   | 'last_owner'
   | 'rate_limited'
   | 'payment_failed'
+  | 'signature_unavailable'
   | 'internal_error';
 
 export class ApiError extends Error {
@@ -98,6 +99,16 @@ export const rateLimited = (message = 'Too many requests.') =>
 
 export const paymentFailed = (message = 'Payment could not be completed.') =>
   new ApiError(402, 'payment_failed', message);
+
+/**
+ * The build has no way to verify a signature — no secp256k1 recovery is
+ * installed. 503 rather than 401 or 403, because the caller's signature may be
+ * perfectly good and the server simply cannot check it. Reporting it as a
+ * rejected signature would send someone hunting for a bug in their wallet.
+ */
+export const signatureUnavailable = (
+  message = 'Signature verification is not available in this deployment.',
+) => new ApiError(503, 'signature_unavailable', message);
 
 export function isApiError(error: unknown): error is ApiError {
   return error instanceof ApiError;
