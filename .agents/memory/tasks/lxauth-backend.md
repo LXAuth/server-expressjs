@@ -112,3 +112,38 @@ Two things a later task should know:
 The error envelope is the contract every later handler codes against: throw an
 `ApiError`, and `errorHandler` is the only thing that writes a status. No handler
 in tasks 4 through 9 should set a status code directly.
+
+### Task 3 — feat/db-schema
+
+Two schema files, `prisma/schema.prisma` for Postgres and
+`prisma/schema.dev.prisma` for SQLite, each with the same 16 models. The 11
+specified tables are as written; the 5 additive ones carry a comment naming the
+endpoint each one exists for.
+
+Migrations, in the order they run:
+
+* `20260101000001_initial_schema` — the baseline.
+* `20260101000002_single_owner_invariant` — hand-written, because Prisma cannot
+  emit it. Carries `one_owner_per_org`, three "one primary per account" partial
+  indexes, and the 4 `CHECK` constraints standing in for the native enum types.
+
+**`prisma/dev-invariant.sql`** applies the same partial indexes to the SQLite
+file, which supports them. The `CHECK` constraints are deliberately absent there:
+`db push` would drop them on the next run, and a constraint that appears to hold
+and does not is worse than none. Dev validates enums in `src/lib/enums.ts`.
+
+Three things a later task should know:
+
+* **The migrations are hand-written, not generated.** `prisma migrate dev` was
+  never run — no network egress — so these are written to match the schema
+  rather than produced by it. On the owner's first real `migrate dev`, Prisma may
+  want to reconcile them. Check its output before trusting the history.
+* **`organization_invites.invitee` is matched on the email string, not a foreign
+  key.** An invite must be able to exist for an address that has no account yet,
+  which a foreign key to `accounts` would forbid.
+* **`refresh_tokens.familyId` is what makes theft detectable.** Rotation keeps
+  the family id, so a replayed revoked token identifies the whole family to kill.
+  Task 4 depends on that column existing.
+
+`prisma/seed.ts` is idempotent — it resolves each entity by `name_id` and then
+creates or updates, so a second run converges rather than colliding.

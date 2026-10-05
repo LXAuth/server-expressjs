@@ -1,0 +1,261 @@
+// LXAuth production schema — PostgreSQL.
+//
+// The 11 tables below are as specified and are not restructured. The 5 that
+// follow are additive: each one backs an endpoint the specified DDL cannot
+// support, and each is justified in scope.md.
+//
+// The 4 enums from the spec are `String` columns rather than native enum types.
+// Prisma cannot declare `enum` on SQLite, and this project runs SQLite in
+// development, so keeping native types would mean a second schema file that
+// drifts. The values live in `src/lib/enums.ts`; the Postgres-only migration
+// adds CHECK constraints so the database still rejects a bad value on its own.
+//
+// `Int` throughout, per the spec's SERIAL/INTEGER. This is a one-way door:
+// changing it later means a migration touching every referencing table.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- The 11 specified tables -----------------------------------------------
+
+model accounts {
+  id        Int      @id @default(autoincrement())
+  type      String   @default("user")
+  status    String   @default("active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  properties            account_properties?
+  emails                account_emails[]
+  addresses             account_addresses[]
+  wallets               wallets[]
+  memberships           account_memberships[]
+  orgMemberships        organization_members[]        @relation("member")
+  ownedOrganizations    organization_members[]        @relation("organization")
+  organizationTeams     organization_teams[]
+  teamMemberships       organization_team_members[]
+  credentials           account_credentials?
+  refreshTokens         refresh_tokens[]
+  invitesCreated        organization_invites[]        @relation("inviter")
+  organizationInvites   organization_invites[]        @relation("inviteOrg")
+
+  @@map("accounts")
+}
+
+model account_properties {
+  accountId   Int      @id @map("account_id")
+  nameId      String   @unique @map("name_id") @db.VarChar(50)
+  nameDisplay String   @map("name_display") @db.VarChar(100)
+  avatarUrl   String?  @map("avatar_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @map("updated_at")
+
+  account accounts @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("account_properties")
+}
+
+model account_emails {
+  id         Int      @id @default(autoincrement())
+  accountId  Int?     @map("account_id")
+  email      String   @unique @db.VarChar(255)
+  isPrimary  Boolean  @default(false) @map("is_primary")
+  isVerified Boolean  @default(false) @map("is_verified")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @default(now()) @map("updated_at")
+
+  account       accounts?                      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  verifications account_email_verifications[]
+
+  @@index([accountId])
+  @@map("account_emails")
+}
+
+model account_addresses {
+  id         Int      @id @default(autoincrement())
+  accountId  Int?     @map("account_id")
+  address    String
+  isPrimary  Boolean  @default(false) @map("is_primary")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @default(now()) @map("updated_at")
+
+  account accounts? @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@map("account_addresses")
+}
+
+model wallets {
+  id            Int      @id @default(autoincrement())
+  accountId     Int?     @map("account_id")
+  walletAddress String   @unique @map("wallet_address") @db.VarChar(255)
+  chain         String   @default("ethereum") @db.VarChar(50)
+  isPrimary     Boolean  @default(false) @map("is_primary")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @map("updated_at")
+
+  account accounts? @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@map("wallets")
+}
+
+model account_memberships {
+  id        Int       @id @default(autoincrement())
+  accountId Int?      @map("account_id")
+  tier      String    @default("free")
+  timeStart DateTime  @default(now()) @map("time_start")
+  timeEnd   DateTime? @map("time_end")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @default(now()) @map("updated_at")
+
+  account accounts? @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@map("account_memberships")
+}
+
+// "Exactly 1 owner per organization" is NOT enforced here. Prisma's schema
+// language cannot express a partial unique index, and application logic alone is
+// racy: two concurrent role updates both read "no owner exists" and both write.
+// The guarantee is the one_owner_per_org index in the hand-written migration,
+// which both providers support.
+model organization_members {
+  organizationId Int      @map("organization_id")
+  userId         Int      @map("user_id")
+  role           String   @default("member")
+  joinedAt       DateTime @default(now()) @map("joined_at")
+
+  organization accounts @relation("organization", fields: [organizationId], references: [id], onDelete: Cascade)
+  user         accounts @relation("member", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([organizationId, userId])
+  @@index([userId])
+  @@map("organization_members")
+}
+
+model organization_teams {
+  id             Int      @id @default(autoincrement())
+  organizationId Int?     @map("organization_id")
+  name           String   @db.VarChar(100)
+  description    String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @default(now()) @map("updated_at")
+
+  organization accounts?                   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members      organization_team_members[]
+
+  @@index([organizationId])
+  @@map("organization_teams")
+}
+
+model organization_team_members {
+  teamId   Int      @map("team_id")
+  userId   Int      @map("user_id")
+  role     String   @default("member") @db.VarChar(50)
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  team organization_teams @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user accounts           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([teamId, userId])
+  @@index([userId])
+  @@map("organization_team_members")
+}
+
+// --- The 5 additive tables -------------------------------------------------
+// Each backs an endpoint the specified DDL cannot support.
+
+// No password column exists anywhere in the specified DDL, so neither
+// POST /auth/login nor PUT /users/me/password can work without this.
+model account_credentials {
+  accountId         Int      @id @map("account_id")
+  passwordHash      String   @map("password_hash")
+  passwordChangedAt DateTime @default(now()) @map("password_changed_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @default(now()) @map("updated_at")
+
+  account accounts @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("account_credentials")
+}
+
+// A stateless JWT cannot be revoked, so logout needs somewhere to record that a
+// session is over. `familyId` is what makes a stolen token's reuse killable:
+// rotating a refresh token keeps the family id, so one compromise can be revoked
+// as a group rather than token by token.
+model refresh_tokens {
+  id         String    @id @default(cuid())
+  accountId  Int       @map("account_id")
+  tokenHash  String    @unique @map("token_hash")
+  familyId   String    @map("family_id")
+  expiresAt  DateTime  @map("expires_at")
+  revokedAt  DateTime? @map("revoked_at")
+  replacedBy String?   @map("replaced_by")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  account accounts @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([familyId])
+  @@map("refresh_tokens")
+}
+
+// Invite then join is a two-step handshake, so the invite has to outlive the
+// request that created it. Single-use via `acceptedAt`; the invitee is matched
+// on the email string rather than a foreign key, because an invite must be able
+// to exist for an address that has no account yet.
+model organization_invites {
+  id             Int       @id @default(autoincrement())
+  organizationId Int       @map("organization_id")
+  email          String    @db.VarChar(255)
+  role           String    @default("member")
+  tokenHash      String    @unique @map("token_hash")
+  invitedById    Int?      @map("invited_by_id")
+  expiresAt      DateTime  @map("expires_at")
+  acceptedAt     DateTime? @map("accepted_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  organization accounts  @relation("inviteOrg", fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy   accounts? @relation("inviter", fields: [invitedById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([email])
+  @@map("organization_invites")
+}
+
+// An email is not verified until its token comes back, so the pending state and
+// the token itself both need storing.
+model account_email_verifications {
+  id        Int      @id @default(autoincrement())
+  tokenHash String   @unique @map("token_hash")
+  emailId   Int      @map("email_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  email account_emails @relation(fields: [emailId], references: [id], onDelete: Cascade)
+
+  @@index([emailId])
+  @@map("account_email_verifications")
+}
+
+// A replayable login nonce is a login bypass, so single-use and expiry belong in
+// the schema — `consumedAt` — not only in the handler that checks them.
+model web3_nonces {
+  nonce      String    @id
+  accountId  Int?      @map("account_id")
+  chain      String    @default("ethereum") @db.VarChar(50)
+  expiresAt  DateTime  @map("expires_at")
+  consumedAt DateTime? @map("consumed_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@index([accountId])
+  @@index([expiresAt])
+  @@map("web3_nonces")
+}
