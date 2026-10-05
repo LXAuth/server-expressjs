@@ -331,3 +331,42 @@ Three things to know:
 * **Removing the primary wallet promotes the oldest remaining one**, so an account
   is never left holding wallets with none of them primary. Removing the last wallet
   is allowed — refusing would leave an account permanently unbindable.
+
+### Task 9 — Memberships
+
+Tier read and upgrade, mounted at `/accounts/{account_id}/membership`.
+
+**No gateway is integrated, and the default provider declines every upgrade.**
+`src/lib/payment/provider.ts` holds the `PaymentProvider` interface and a
+`NoopPaymentProvider` whose `isAvailable()` returns false. No gateway SDK is
+imported anywhere. `POST /membership/upgrade` therefore answers 402
+`payment_failed` and writes nothing, which is the correct outcome: an upgrade
+path that silently succeeds in development hands out paid tiers for free the
+first time it meets a real customer.
+
+**Availability is checked before charging**, not inferred from the outcome — a
+provider that is not wired up is a different problem from a declined card and the
+two deserve different messages. `charge` declining as well is defence in depth,
+not the primary gate.
+
+**The provider is called before the tier is written.** The reverse order means a
+declined card leaves an account on the tier it just tried to pay for, and the
+refund becomes somebody's problem. This way a failed charge leaves the account
+exactly where it was, which is the state that is always safe to be in.
+
+**Authorization reuses `requireWalletAdmin` rather than repeating the rule.** "May
+this caller manage this account's wallets" and "may this caller change this
+account's plan" are the same question; a second implementation is a second place
+for it to drift.
+
+**Upgrades only, ranked.** free < premium < enterprise. A downgrade is refused
+rather than performed, because proration is a refund policy and this build has no
+answer for one. Requesting the tier an account already holds is a 409, so a
+retried request does not become a second purchase.
+
+**One row per account, updated in place** — that is the specified table's shape.
+A consequence worth knowing before anyone relies on it: **there is no history of
+tier changes.** `time_start`/`time_end` bound the current period, not a log. If
+billing reconciliation needs that, it needs a new table, which is the owner's
+call. An upgrade clears `time_end`, so a lapsed membership revives rather than
+sitting in a state that reads as both "enterprise" and "expired".

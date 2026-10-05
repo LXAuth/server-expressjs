@@ -3,6 +3,7 @@ import { authRoutes } from '../modules/auth/auth.routes.js';
 import { userRoutes } from '../modules/users/user.routes.js';
 import { organizationRoutes } from '../modules/organizations/organization.routes.js';
 import { walletRoutes } from '../modules/wallets/wallet.routes.js';
+import { membershipRoutes } from '../modules/memberships/membership.routes.js';
 
 /**
  * The single mount point for every route, under `/api/v1`.
@@ -22,8 +23,7 @@ export function registerRoutes(): Router {
   // is polymorphic — a user, an organization, or an agent. That is why the mount
   // point is `/accounts/{account_id}` and not under `/users`.
   router.use('/accounts/:account_id/wallets', walletRoutes());
-
-  // router.use('/accounts/:account_id/membership', membershipRoutes)  // task 9
+  router.use('/accounts/:account_id/membership', membershipRoutes());
 
   return router;
 }
