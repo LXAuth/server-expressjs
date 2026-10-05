@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Test output
+coverage/
+.nyc_output/
+
+# Environment — .env.example is committed, real .env files are not
+.env
+.env.*
+!.env.example
+
+# Working plans — untracked by design, one git add -A from being published
+.agents/plans/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Prisma — generated client and local SQLite databases
+prisma/*.db
+prisma/*.db-journal
+prisma/dev.db*
+prisma/generated/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
