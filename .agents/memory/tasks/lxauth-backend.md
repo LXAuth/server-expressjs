@@ -370,3 +370,64 @@ tier changes.** `time_start`/`time_end` bound the current period, not a log. If
 billing reconciliation needs that, it needs a new table, which is the owner's
 call. An upgrade clears `time_end`, so a lapsed membership revives rather than
 sitting in a state that reads as both "enterprise" and "expired".
+
+### Task 10 — test/integration
+
+Seven files: `helpers`, `auth`, `users`, `organizations`, `owner-invariant`,
+`verify-token`, `web3`, `memberships`, `signature`. Run with `npm test`.
+
+**These tests have never been run. No test in this repository has a result
+behind it.** The build environment has no network egress, so `npm install` never
+completed and `vitest` never executed — not once, not partially, not for one
+file. Every assertion in `tests/` is an assertion someone wrote and nobody
+watched hold. Expect failures on the first real run: the schema was never
+generated (`@prisma/client` does not exist yet), and hand-written tests carry
+real mistakes. **Do not read a green run as evidence this task was previously
+verified.**
+
+To run them:
+
+```
+npm install
+npm run db:generate
+npm test
+```
+
+That gives a SQLite file per test file, with `prisma/dev-invariant.sql` applied
+so the partial unique indexes are present. **Run once against Postgres before
+release** — that is the only run that exercises the `CHECK` constraints from
+`20260101000002_single_owner_invariant`, since `db push` applies no migrations
+and a dev database therefore never has them:
+
+```
+TEST_DATABASE_URL=postgresql://lxauth:lxauth@localhost:5432/lxauth_test \
+  npm run db:deploy && npm test
+```
+
+Point that at a database you are willing to have emptied; `resetDatabase` wipes it.
+
+**Two tests exist because the plan called for them, and they earn it:**
+
+* `verify-token.test.ts` — valid token returns permissions; expired, tampered,
+  wrong-secret, wrong-audience, and `alg: none` are all rejected; the expiry
+  reported is the token's own. The "no database lookup on the happy path"
+  constraint is *not* asserted here — it is a statement about what the code does
+  not do, so it is a code-reading check, and task 4 recorded it as one.
+* `owner-invariant.test.ts` — the central case writes two owner rows **directly
+  through Prisma, bypassing the service**, and asserts the database refuses with
+  `P2002`. That is the test that matters: if it passes, the invariant holds
+  regardless of what the endpoint code does. The endpoint tests around it confirm
+  the code cooperates rather than being trusted to carry the weight.
+
+**`web3.test.ts` asserts the current non-functional state.** Its first case is
+`expect(isRecoveryAvailable()).toBe(false)`, and the web3 cases assert 503
+`signature_unavailable`. A suite that only tested the happy path would look green
+while the feature was entirely unusable. If someone wires up a recovery library,
+that first test fails deliberately — forcing this file to be rewritten, because
+by then its cases would be asserting the wrong thing.
+
+**`signature.test.ts` needs no database** and is the one file that can be trusted
+soonest. It carries the known keccak256 vectors, a check that keccak differs from
+NIST SHA-3, EIP-2 low-`s` enforcement, and the 64-byte-signature rejection.
+keccak256 is hand-written, so these vectors are the only thing between it and a
+silent wrong answer.
