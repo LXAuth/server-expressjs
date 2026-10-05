@@ -1,4 +1,5 @@
 import express, { type Express } from 'express';
+import cookieParser from 'cookie-parser';
 import { config } from './config.js';
 import { logger } from './lib/logger.js';
 import { errorHandler, notFoundHandler, requestId } from './middleware/error-handler.js';
@@ -21,6 +22,9 @@ export function createApp(): Express {
 
   app.use(requestId);
   app.use(express.json({ limit: '1mb' }));
+  // No secret: the only cookie read is `access_token`, and its value is a
+  // signed JWT verified on its own merits, so it needs no separate signing.
+  app.use(cookieParser());
 
   // Baseline hardening. The API returns JSON and takes no cookie input, so the
   // CSP is about not letting a browser be talked into interpreting a response

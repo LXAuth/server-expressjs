@@ -147,3 +147,39 @@ Three things a later task should know:
 
 `prisma/seed.ts` is idempotent — it resolves each entity by `name_id` and then
 creates or updates, so a second run converges rather than colliding.
+
+### Task 4 — feat/auth-core
+
+argon2id hashing with an opportunistic rehash on login, opaque refresh tokens
+hashed at rest with a pepper, JWT access tokens carrying the org roles, and the
+four auth endpoints.
+
+**Refresh rotation with family kill.** Every refresh issues a new token, marks
+the old one revoked, and keeps the `family_id` from task 3. Presenting an
+already-revoked token means either a client replay or a theft, and the two look
+identical from here — so the whole family is revoked, including the token the
+honest client is holding. That costs a legitimate user one re-login and costs a
+thief the entire stolen lineage.
+
+**`verify-token` does no database lookup.** Verified by reading the handler:
+it calls `verifyAccessToken`, then `buildVerifyTokenResult`, and nothing else.
+The accepted trade is that a suspension takes effect no sooner than the access
+token expires, which is why the lifetime is 15 minutes rather than an hour.
+`derivePermissions` computes the caller's permissions from the claims so a
+microservice gets its answer without the database being involved.
+
+**Login resists account enumeration two ways.** An unknown email, an account
+with no password, and a wrong password all produce the same 401 body — and the
+first two additionally run a throwaway argon2 hash, so response time does not
+distinguish them either.
+
+Two things later tasks should know:
+
+* **`assertAccountUsable` and `requireOrgRole` live in `src/lib/claims.ts`.** A
+  deleted account is kept as a row so audit references stay resolvable, so
+  refusing it is explicit in `assertAccountUsable` rather than left to a missing
+  row. Task 5's password change must call `revokeAllSessions` from the auth
+  service — changing a password that leaves old sessions alive is not a
+  password change.
+* **`AccessTokenClaims` now carries `exp`.** `verify-token` reports the token's
+  real expiry from that claim rather than recomputing one.
