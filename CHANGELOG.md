@@ -5,11 +5,15 @@ All notable changes to this project are recorded here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.0] — first drop
 
 Everything below shipped in one sitting and has **never been run**. No migration
 was applied, no test executed, no request served. Treat it as a code drop rather
 than a release, and read the caveats at the bottom before deploying it.
+
+The version is `0.1.0` and deliberately not `1.0.0`: nothing here has been
+executed, the migration history is hand-written, and web3 refuses every request.
+A `1.0.0` would claim a stability that does not exist.
 
 ### Added
 
