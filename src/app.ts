@@ -6,7 +6,9 @@ import { errorHandler, notFound } from "./http/errors.js";
 import { DEFAULT_RATE_LIMITS, limiter, type RateLimits } from "./http/rate-limit.js";
 import { RouteTable } from "./http/route-table.js";
 import { noStore, requireJsonBody } from "./http/security.js";
+import type { Fetch } from "./oauth/providers.js";
 import { registerAccountRoutes } from "./routes/accounts.js";
+import { registerConnectionRoutes } from "./routes/connections.js";
 import type { AppContext } from "./routes/context.js";
 import { registerHealthRoutes } from "./routes/health.js";
 
@@ -17,6 +19,8 @@ export interface AppDeps {
   log?: (err: unknown) => void;
   /** Per-IP request limits. Defaults to `DEFAULT_RATE_LIMITS`. */
   rateLimits?: Partial<RateLimits>;
+  /** Outbound HTTP for GitHub and GitLab. Defaults to the global `fetch`. */
+  fetch?: Fetch;
 }
 
 export interface App {
@@ -66,9 +70,10 @@ export function createApp(deps: AppDeps): App {
   // 4. Bodies are small JSON documents, nothing else.
   app.use(requireJsonBody, express.json({ limit: "10kb", strict: true, type: "application/json" }));
 
-  const ctx: AppContext = { routes, db: deps.db, config, rateLimits };
+  const ctx: AppContext = { routes, db: deps.db, config, rateLimits, fetch: deps.fetch ?? fetch };
   registerHealthRoutes(routes, deps.db);
   registerAccountRoutes(ctx);
+  registerConnectionRoutes(ctx);
 
   app.use(router);
   // A declared path whose handler chose not to answer still gets the generic 404.

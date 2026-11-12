@@ -102,3 +102,15 @@ after `LOGIN_MAX_ATTEMPTS`. Every security event is written to `audit_events`.
 Decision: registration answers `409` for an address already in use. Hiding that needs email
 verification, which needs an outbound mail service that is out of scope for 0.1.0; the
 endpoint is rate limited instead. Next: task 5 adds GitHub and GitLab linking.
+
+### Task 5 — feat/oauth-connection
+
+Landed: GitHub and GitLab (including self-managed via `GITLAB_BASE_URL`) account linking.
+A client with a session calls `POST /api/v1/connections/{provider}` and receives an
+`authorize_url` carrying single-use state and a PKCE S256 challenge; the provider returns the
+browser to `/api/v1/connections/{provider}/callback`, which consumes the state, exchanges the
+code, reads only the provider user id and login, revokes the provider token, and redirects
+with `303` to the client's `redirect_uri` with `provider`, `status`, and `reason`. Listing and
+unlinking are under `/api/v1/connections`. With the provider variables unset or left as
+`your_*` placeholders, providers report `enabled: false` and linking answers `404`; email
+accounts are unaffected. Next: task 6 adds the `/api` page.
