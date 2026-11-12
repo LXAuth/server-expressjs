@@ -114,3 +114,13 @@ with `303` to the client's `redirect_uri` with `provider`, `status`, and `reason
 unlinking are under `/api/v1/connections`. With the provider variables unset or left as
 `your_*` placeholders, providers report `enabled: false` and linking answers `404`; email
 accounts are unaffected. Next: task 6 adds the `/api` page.
+
+### Task 6 — feat/api-docs
+
+Landed: the `/api` usage page — server-rendered once at startup from
+`src/docs/endpoints.ts`, dark by default with a light-theme toggle that persists in
+`localStorage` and applies before first paint, a section nav, quick-start `curl` steps,
+expandable endpoint cards, an errors table, and live provider status. It loads nothing
+external and runs under a hash-based CSP with no `unsafe-inline`. A test fails if the
+documented endpoints and the declared routes ever drift apart. Checked at 1280 px and
+390 px in both themes with no console errors or horizontal scroll. Next: task 7 releases.
