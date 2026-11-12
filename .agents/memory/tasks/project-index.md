@@ -43,3 +43,10 @@ human wiki, and every tracked file becomes reachable from one root index, as the
 ### Task 1 — plan/project-index
 
 Landed: this record. Next: task 2 writes the human wiki.
+
+### Task 2 — docs/wiki
+
+Landed: five human pages under `wiki/information/` — getting started, configuration, client
+integration, security model, and development — holding the facts that were in the README,
+plus migrations, proxy setup, provider linking, and adding an endpoint. `README.md` is now an
+overview with a quick start and a table of those pages. Next: task 3 adds the indexes.
