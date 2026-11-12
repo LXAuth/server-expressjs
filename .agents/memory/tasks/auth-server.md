@@ -1,7 +1,7 @@
 ---
 name: auth-server
 description: Task record for building the zero-trust central account server (Express + TypeScript)
-status: in-progress
+status: done
 ---
 
 # Task record — zero-trust central auth server
@@ -54,13 +54,13 @@ their users. One account works across every client the owner or other developers
 
 | # | Title | Scope | Repository | Branch | Files / areas | PR |
 |---|---|---|---|---|---|---|
-| 1 | Task record | This record and `.gitignore` | LXAuth/server-expressjs | `plan/auth-server` | `.agents/memory/tasks/`, `.gitignore` | |
-| 2 | Scaffold | Express 5 + TypeScript, config, security middleware, route guard | LXAuth/server-expressjs | `build/scaffold` | `package.json`, `tsconfig.json`, `src/`, `.env.example`, `docker-compose.yml` | |
-| 3 | Database | Migrations, seeds, migration runner | LXAuth/server-expressjs | `feat/database` | `migrations/`, `src/db/` | |
-| 4 | Accounts | Clients, registration, login, sessions, emails, password | LXAuth/server-expressjs | `feat/account` | `src/routes/`, `src/services/`, `test/` | |
-| 5 | Provider linking | GitHub and GitLab connections | LXAuth/server-expressjs | `feat/oauth-connection` | `src/oauth/`, `src/routes/connections.ts` | |
-| 6 | API page | `/api` usage page, dark and light themes | LXAuth/server-expressjs | `feat/api-docs` | `src/docs/` | |
-| 7 | Release | Version, changelog, audit report, README | LXAuth/server-expressjs | `release/0.1.0` | `package.json`, `wiki/logs/0/1/0/`, `README.md` | |
+| 1 | Task record | This record and `.gitignore` | LXAuth/server-expressjs | `plan/auth-server` | `.agents/memory/tasks/`, `.gitignore` | #1 |
+| 2 | Scaffold | Express 5 + TypeScript, config, security middleware, route guard | LXAuth/server-expressjs | `build/scaffold` | `package.json`, `tsconfig.json`, `src/`, `.env.example`, `docker-compose.yml` | #2 |
+| 3 | Database | Migrations, seeds, migration runner | LXAuth/server-expressjs | `feat/database` | `migrations/`, `src/db/` | #3 |
+| 4 | Accounts | Clients, registration, login, sessions, emails, password | LXAuth/server-expressjs | `feat/account` | `src/routes/`, `src/services/`, `test/` | #4 |
+| 5 | Provider linking | GitHub and GitLab connections | LXAuth/server-expressjs | `feat/oauth-connection` | `src/oauth/`, `src/routes/connections.ts` | #5 |
+| 6 | API page | `/api` usage page, dark and light themes | LXAuth/server-expressjs | `feat/api-docs` | `src/docs/` | #6 |
+| 7 | Release | Version, changelog, audit report, README | LXAuth/server-expressjs | `release/0.1.0` | `package.json`, `wiki/logs/0/1/0/`, `README.md` | #7 |
 
 ## Progress
 
@@ -124,3 +124,16 @@ expandable endpoint cards, an errors table, and live provider status. It loads n
 external and runs under a hash-based CSP with no `unsafe-inline`. A test fails if the
 documented endpoints and the declared routes ever drift apart. Checked at 1280 px and
 390 px in both themes with no console errors or horizontal scroll. Next: task 7 releases.
+
+### Task 7 — release/0.1.0
+
+Landed: version `0.1.0` in `package.json` and the lockfile, `README.md`,
+`wiki/logs/0/1/0/CHANGELOG.md`, the dependency audit in `wiki/logs/0/1/0/NOTES.md`, and
+`wiki/logs/logs-index.md`. Every direct dependency is at its latest version and `npm audit`
+reports 0 vulnerabilities across 247 packages. `npm audit signatures` could not run because the
+build network blocked the registry key download; it is listed as a follow-up. 61 tests pass on
+Node.js 22 against PostgreSQL 16.
+
+Left open: email verification (needs an outbound mail service), sign-in with GitHub or GitLab
+(linking only for now), a shared rate-limit store for multi-instance deployments, and CI.
+Pull requests #1–#7 are open, stacked in task order; the `PR` column above records them.
