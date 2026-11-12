@@ -20,108 +20,27 @@ across any number of clients.
   traversal and encoded-path tricks — gets the same `404 {"message":"Not found"}`.
 - **`/api`** serves the usage page, with a dark theme by default and a light-theme toggle.
 
-## Requirements
-
-- Node.js 22.12 or later
-- PostgreSQL 14 or later (a `docker-compose.yml` for PostgreSQL 18 is included)
-
-## Run it
+## Quick start
 
 ```bash
-cp .env.example .env            # then set DATABASE_URL and, optionally, providers
-docker compose up -d db         # or point DATABASE_URL at your own PostgreSQL
-npm install
-npm run build
-npm start                       # applies migrations, then listens on PORT
+cp .env.example .env            # then set DATABASE_URL
+docker compose up -d db
+npm install && npm run build && npm start
 ```
 
 Open `http://localhost:3000/api` for the API reference.
 
-For development, `npm run dev` runs the TypeScript source with reload.
+## Documentation
 
-## Configuration
+| Page | What it covers |
+|---|---|
+| [Getting started](wiki/information/getting-started.md) | Requirements, running the server, migrations |
+| [Configuration](wiki/information/configuration.md) | Every environment variable, providers, proxies |
+| [Client integration](wiki/information/client-integration.md) | Registering a client, logins, access checks, wallet sign-in, provider linking |
+| [Security model](wiki/information/security-model.md) | What is protected and how, and the known limits |
+| [Development](wiki/information/development.md) | Checks, tests, code layout, adding an endpoint |
 
-All configuration is environment variables; see [`.env.example`](.env.example). Any value
-that starts with `your_` is a placeholder and is treated as unset.
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `DATABASE_URL` | — (required) | PostgreSQL connection string |
-| `PORT`, `HOST` | `3000`, `0.0.0.0` | Listen address |
-| `PUBLIC_BASE_URL` | `http://localhost:3000` | Public URL, used for provider callback URLs |
-| `TRUST_PROXY` | `0` | Reverse proxies in front of the server, for the real client IP |
-| `SESSION_TTL_HOURS` | `720` | Session lifetime |
-| `MAX_SESSIONS_PER_ACCOUNT` | `50` | Concurrent sessions; the least recently used is revoked past this |
-| `LOGIN_MAX_ATTEMPTS`, `LOGIN_LOCK_MINUTES` | `5`, `15` | Temporary lockout after repeated failures |
-| `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | unset | Enables GitHub linking |
-| `GITLAB_CLIENT_ID`, `GITLAB_CLIENT_SECRET` | unset | Enables GitLab linking |
-| `GITLAB_BASE_URL` | `https://gitlab.com` | Self-managed GitLab instance |
-
-When registering an OAuth app with GitHub or GitLab, set its callback URL to
-`{PUBLIC_BASE_URL}/api/v1/connections/{github|gitlab}/callback`.
-
-## How a client uses it
-
-1. Create an account: `POST /api/v1/accounts`.
-2. Register a client with your own email and password (HTTP Basic):
-   `POST /api/v1/clients` → `client_id` and `client_secret`, shown once.
-3. From your backend, log users in: `POST /api/v1/auth/login` with
-   `X-Client-Id` and `X-Client-Secret` → `200 {"message":"Login successful","session_token":"lxa_…"}`.
-4. On later requests, check the session: `GET /api/v1/auth/session` with the client
-   headers and `Authorization: Bearer lxa_…`.
-
-The client secret belongs on a server. Do not ship it in a browser or mobile app.
-
-### Authorization checks
-
-To gate a feature on organization or team membership, call
-`GET /api/v1/organizations/{id}/access?role=admin` (or `/api/v1/teams/{id}/access?role=lead`)
-with the client headers and the user's session. The answer is `200 {"message":"Access granted"}`
-or `403 {"message":"Access denied"}` — nothing about the organization or its members.
-
-### Wallet sign-in
-
-Set the client's `siwe_domain` (for example `app.example.com`), then:
-
-1. `POST /api/v1/auth/wallet/challenge` with `{address, chain_id}` → `siwe_message`.
-2. Have the wallet `personal_sign` that exact message.
-3. `POST /api/v1/auth/wallet/login` with `{message, signature}` →
-   `200 {"message":"Login successful","session_token":"lxa_…"}`.
-
-A wallet must first be linked to an account through `/api/v1/account/wallets/challenge` and
-`POST /api/v1/account/wallets`.
-
-## Security model
-
-- Passwords are hashed with argon2id. Client secrets, session tokens, and OAuth state are
-  256-bit random values stored only as SHA-256 hashes.
-- Every failed login returns the same `401 {"message":"Invalid credentials"}`, with a dummy
-  password check for unknown addresses so timing does not reveal which addresses exist.
-- Sessions are bound to their client; revoking a client ends all of its sessions; changing a
-  password ends every other session.
-- Provider linking uses single-use state and PKCE. Only the provider user id and username are
-  kept, and the provider's access token is revoked straight after use.
-- Responses carry helmet security headers and `Cache-Control: no-store`; there is no CORS, no
-  static file serving, and no stack trace in any response. Bodies are JSON only, capped at 10 kB.
-- Per-IP rate limits apply globally and, more tightly, to login, client management, and
-  registration. They are in-memory: put a shared store in front when running several
-  instances.
-- Security events (logins, failures, lockouts, revocations, changes) are written to the
-  `audit_events` table.
-- Each organization has exactly one owner, enforced by the database. Invite tokens and wallet
-  challenges are hashed and single use; the server writes every wallet message it will accept.
-
-Known limits: email addresses are not verified (no mail service yet), so
-registration reports an address that is already taken with `409`.
-
-## Development
-
-```bash
-npm run typecheck
-npm test          # needs PostgreSQL; set TEST_DATABASE_URL (default
-                  # postgres://lxauth:lxauth@localhost:5432/lxauth_test)
-npm run audit
-```
+Release notes are under [`wiki/logs/`](wiki/logs/).
 
 ## License
 
