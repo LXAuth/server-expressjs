@@ -71,3 +71,11 @@ be deleted.
 
 Landed: this record, with the owner-approved scope and the features left out. Next: task 2
 adds profiles.
+
+### Task 2 — feat/profile
+
+Landed: `migrations/0002_profile.sql` adds `name_id` (unique, lowercase, 3–50 of
+`a-z 0-9 _ -`, checked in the database too), `name_display`, and `avatar_url` (https only)
+to `account_property`. `GET` and `PATCH /api/v1/account/profile` read and update them, with
+`null` clearing a field. A shared `test/harness.ts` now creates a client and logged-in users
+for the 0.2.0 suites. Next: task 3 adds organizations.

@@ -56,3 +56,17 @@ export const ChangePasswordBody = z.strictObject({
   new_password: newPasswordField,
 });
 export const DeleteAccountBody = z.strictObject({ password: passwordField });
+
+export const nameIdField = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .regex(/^[a-z0-9](?:[a-z0-9_-]{1,48}[a-z0-9])$/, "3–50 characters: a-z, 0-9, _ or -, not at either end");
+
+export const UpdateProfileBody = z
+  .strictObject({
+    name_id: nameIdField.nullable().optional(),
+    name_display: z.string().trim().min(1).max(100).nullable().optional(),
+    avatar_url: z.url({ protocol: /^https$/ }).max(2048).nullable().optional(),
+  })
+  .refine((b) => Object.keys(b).length > 0, "Nothing to update");

@@ -38,6 +38,26 @@ export const ENDPOINT_GROUPS: EndpointGroup[] = [
         notes: "Answers 409 if the address is already registered. Limited to 10 per IP per hour.",
       },
       {
+        method: "GET",
+        path: "/api/v1/account/profile",
+        summary: "Read your own profile.",
+        auth: ["client", "session"],
+        response: {
+          status: 200,
+          body: { profile: { name_id: "ada", name_display: "Ada Lovelace", avatar_url: "https://…" } },
+        },
+      },
+      {
+        method: "PATCH",
+        path: "/api/v1/account/profile",
+        summary: "Set your handle, display name, or avatar. Send null to clear a field.",
+        auth: ["client", "session"],
+        body: { name_id: "ada", name_display: "Ada Lovelace", avatar_url: "https://example.com/ada.png" },
+        response: { status: 200, body: { message: "Profile updated" } },
+        notes:
+          "name_id is unique, 3–50 characters of a-z, 0-9, _ or -. Organization members see it instead of your email. Answers 409 if it is taken.",
+      },
+      {
         method: "PUT",
         path: "/api/v1/account/password",
         summary: "Change the password. Every other session is signed out.",
