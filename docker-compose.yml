@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: lxauth
+      POSTGRES_PASSWORD: your_database_password
+      POSTGRES_DB: lxauth
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - lxauth-db:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lxauth -d lxauth"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  lxauth-db:

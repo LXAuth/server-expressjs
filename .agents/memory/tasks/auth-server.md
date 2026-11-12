@@ -68,3 +68,12 @@ their users. One account works across every client the owner or other developers
 
 Landed: this record with the owner-approved plan, and `.gitignore` (dependencies, build
 output, `.env` files, and `.agents/plans/`). Next: task 2 builds the scaffold on top.
+
+### Task 2 — build/scaffold
+
+Landed: Express 5 + TypeScript 7 project (ESM, strict), zod-validated environment config
+where `your_*` placeholders count as unset, `.env.example`, `docker-compose.yml` for
+PostgreSQL 18, helmet headers, `Cache-Control: no-store`, a global per-IP rate limit, a
+10 kB JSON-only body parser, and the `RouteTable` allowlist guard (generic `404` for
+undeclared or malformed URLs, `405` with `Allow` for a wrong method). `GET /api/v1/health`
+is the only route so far. Next: task 3 adds the database.
