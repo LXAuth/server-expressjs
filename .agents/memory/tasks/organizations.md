@@ -58,12 +58,12 @@ be deleted.
 
 | # | Title | Scope | Repository | Branch | Files / areas | PR |
 |---|---|---|---|---|---|---|
-| 1 | Task record | This record | LXAuth/server-expressjs | `plan/organizations` | `.agents/memory/tasks/` || #8 |
-| 2 | Profiles | Handle, display name, avatar | LXAuth/server-expressjs | `feat/profile` | `migrations/0002_*`, `src/services/profile.ts`, routes, docs || #9 |
-| 3 | Organizations | Orgs, members, roles, transfer, invites, access check | LXAuth/server-expressjs | `feat/organization` | `migrations/0003_*`, `src/services/organizations.ts`, routes, docs || #10 |
-| 4 | Teams | Teams, team members, access check | LXAuth/server-expressjs | `feat/team` | `migrations/0004_*`, `src/services/teams.ts`, routes, docs || #11 |
-| 5 | Wallets | SIWE nonce, wallet sign-in, link, unlink | LXAuth/server-expressjs | `feat/wallet` | `migrations/0005_*`, `src/web3/`, routes, docs || #12 |
-| 6 | Release | Version, changelog, README, audit | LXAuth/server-expressjs | `release/0.2.0` | `package.json`, `wiki/logs/0/2/0/`, `README.md` || #13 |
+| 1 | Task record | This record | LXAuth/server-expressjs | `plan/organizations` | `.agents/memory/tasks/` | #8 |
+| 2 | Profiles | Handle, display name, avatar | LXAuth/server-expressjs | `feat/profile` | `migrations/0002_*`, `src/services/profile.ts`, routes, docs | #9 |
+| 3 | Organizations | Orgs, members, roles, transfer, invites, access check | LXAuth/server-expressjs | `feat/organization` | `migrations/0003_*`, `src/services/organizations.ts`, routes, docs | #10 |
+| 4 | Teams | Teams, team members, access check | LXAuth/server-expressjs | `feat/team` | `migrations/0004_*`, `src/services/teams.ts`, routes, docs | #11 |
+| 5 | Wallets | SIWE nonce, wallet sign-in, link, unlink | LXAuth/server-expressjs | `feat/wallet` | `migrations/0005_*`, `src/web3/`, routes, docs | #12 |
+| 6 | Release | Version, changelog, README, audit | LXAuth/server-expressjs | `release/0.2.0` | `package.json`, `wiki/logs/0/2/0/`, `README.md` | #13 |
 
 ## Progress
 
