@@ -34,11 +34,13 @@ export const LoginBody = z.strictObject({ email: emailField, password: passwordF
 export const CreateClientBody = z.strictObject({
   name: z.string().trim().min(1).max(100),
   redirect_uri: redirectUriField.nullable().optional(),
+  siwe_domain: z.lazy(() => siweDomainField).nullable().optional(),
 });
 export const UpdateClientBody = z
   .strictObject({
     name: z.string().trim().min(1).max(100).optional(),
     redirect_uri: redirectUriField.nullable().optional(),
+    siwe_domain: z.lazy(() => siweDomainField).nullable().optional(),
   })
   .refine((b) => Object.keys(b).length > 0, "Nothing to update");
 
@@ -112,3 +114,20 @@ export const UpdateTeamBody = z
   })
   .refine((b) => Object.keys(b).length > 0, "Nothing to update");
 export const PutTeamMemberBody = z.strictObject({ role: z.enum(["lead", "member"]).default("member") });
+
+/** A bare host name, optionally with a port, as it appears in an EIP-4361 message. */
+export const siweDomainField = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .max(253)
+  .regex(/^(?=.{1,253}(?::\d{1,5})?$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*(?::\d{1,5})?$/, "Must be a host name such as app.example.com");
+
+export const WalletChallengeBody = z.strictObject({
+  address: z.string().regex(/^0x[0-9a-fA-F]{40}$/, "Must be a 0x-prefixed 20-byte hex address"),
+  chain_id: z.number().int().min(1).max(2_147_483_647).default(1),
+});
+export const WalletSignatureBody = z.strictObject({
+  message: z.string().min(1).max(2048),
+  signature: z.string().regex(/^0x[0-9a-fA-F]{130}$/, "Must be a 65-byte hex signature"),
+});

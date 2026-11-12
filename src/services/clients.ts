@@ -13,6 +13,7 @@ export interface ClientSummary {
   client_id: string;
   name: string;
   redirect_uri: string | null;
+  siwe_domain: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -40,7 +41,7 @@ export async function authenticateClient(
 export async function createClient(
   db: Db,
   ownerAccountId: string,
-  input: { name: string; redirect_uri?: string | null | undefined },
+  input: { name: string; redirect_uri?: string | null | undefined; siwe_domain?: string | null | undefined },
   ip?: string,
 ): Promise<{ client_id: string; client_secret: string }> {
   const publicId = randomToken("lxc", 16);
@@ -49,8 +50,9 @@ export async function createClient(
     const {
       rows: [client],
     } = await tx.query<{ id: string }>(
-      "INSERT INTO clients (owner_account_id, public_id, secret_hash, name, redirect_uri) VALUES ($1, $2, $3, $4, $5) RETURNING id",
-      [ownerAccountId, publicId, sha256Hex(secret), input.name, input.redirect_uri ?? null],
+      `INSERT INTO clients (owner_account_id, public_id, secret_hash, name, redirect_uri, siwe_domain)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+      [ownerAccountId, publicId, sha256Hex(secret), input.name, input.redirect_uri ?? null, input.siwe_domain ?? null],
     );
     await audit(tx, "client.created", { accountId: ownerAccountId, clientId: client?.id ?? null, ip });
   });
@@ -59,7 +61,7 @@ export async function createClient(
 
 export async function listClients(db: Db, ownerAccountId: string): Promise<ClientSummary[]> {
   const { rows } = await db.query<ClientSummary>(
-    `SELECT public_id AS client_id, name, redirect_uri, created_at, updated_at
+    `SELECT public_id AS client_id, name, redirect_uri, siwe_domain, created_at, updated_at
        FROM clients WHERE owner_account_id = $1 AND revoked_at IS NULL ORDER BY created_at`,
     [ownerAccountId],
   );
@@ -79,16 +81,28 @@ export async function updateClient(
   db: Db,
   ownerAccountId: string,
   publicId: string,
-  input: { name?: string | undefined; redirect_uri?: string | null | undefined },
+  input: {
+    name?: string | undefined;
+    redirect_uri?: string | null | undefined;
+    siwe_domain?: string | null | undefined;
+  },
   ip?: string,
 ): Promise<void> {
   const id = await ownedClientId(db, ownerAccountId, publicId);
   await db.query(
     `UPDATE clients
         SET name = COALESCE($2, name),
-            redirect_uri = CASE WHEN $3::boolean THEN $4 ELSE redirect_uri END
+            redirect_uri = CASE WHEN $3::boolean THEN $4 ELSE redirect_uri END,
+            siwe_domain = CASE WHEN $5::boolean THEN $6 ELSE siwe_domain END
       WHERE id = $1`,
-    [id, input.name ?? null, input.redirect_uri !== undefined, input.redirect_uri ?? null],
+    [
+      id,
+      input.name ?? null,
+      input.redirect_uri !== undefined,
+      input.redirect_uri ?? null,
+      input.siwe_domain !== undefined,
+      input.siwe_domain ?? null,
+    ],
   );
   await audit(db, "client.updated", { accountId: ownerAccountId, clientId: id, ip });
 }

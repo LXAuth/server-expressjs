@@ -13,8 +13,11 @@ export function testConfig(overrides: NodeJS.ProcessEnv = {}): Config {
 export async function freshDatabase(): Promise<Db> {
   const db = createPool(TEST_DATABASE_URL);
   await migrate(db);
-  await db.query(
-    "TRUNCATE accounts, account_property, account_emails, clients, sessions, account_connections, oauth_states, audit_events CASCADE",
+  // Empty every table except the migration log and the seeded lookup tables.
+  const { rows } = await db.query<{ tablename: string }>(
+    `SELECT tablename FROM pg_tables WHERE schemaname = 'public'
+       AND tablename NOT IN ('schema_migrations', 'platforms', 'email_types')`,
   );
+  await db.query(`TRUNCATE ${rows.map((r) => `"${r.tablename}"`).join(", ")} CASCADE`);
   return db;
 }

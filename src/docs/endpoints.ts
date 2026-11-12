@@ -482,6 +482,76 @@ export const ENDPOINT_GROUPS: EndpointGroup[] = [
     ],
   },
   {
+    id: "wallets",
+    title: "Ethereum wallets",
+    intro:
+      "Link Ethereum wallets to an account and sign in with them using Sign-In with Ethereum (EIP-4361). The server writes the exact message to sign and accepts each one once, from the same client, within 10 minutes. Wallet sign-in needs the client's siwe_domain set; the message names that domain.",
+    endpoints: [
+      {
+        method: "POST",
+        path: "/api/v1/auth/wallet/challenge",
+        summary: "Get the sign-in message for a wallet address.",
+        auth: ["client"],
+        body: { address: "0x2c7536E3605D9C16a7a3D7b1898e529396a65c23", chain_id: 1 },
+        response: {
+          status: 200,
+          body: {
+            message: "Sign siwe_message with the wallet (personal_sign)",
+            siwe_message: "app.example.com wants you to sign in with your Ethereum account:\n0x2c75…",
+            expires_at: "…",
+          },
+        },
+        notes: "Issued for any address, linked or not, so it reveals nothing about which wallets exist.",
+      },
+      {
+        method: "POST",
+        path: "/api/v1/auth/wallet/login",
+        summary: "Sign in with the signed message.",
+        auth: ["client"],
+        body: { message: "<siwe_message, unchanged>", signature: "0x…(65 bytes)" },
+        response: { status: 200, body: { message: "Login successful", session_token: "lxa_…" } },
+        notes: "Every failure answers the same 401 {\"message\":\"Invalid credentials\"}.",
+      },
+      {
+        method: "GET",
+        path: "/api/v1/account/wallets",
+        summary: "List linked wallets.",
+        auth: ["client", "session"],
+        response: {
+          status: 200,
+          body: { wallets: [{ id: "uuid", address: "0x2c75…", chain_id: 1, created_at: "…", last_used_at: null }] },
+        },
+      },
+      {
+        method: "POST",
+        path: "/api/v1/account/wallets/challenge",
+        summary: "Get the message that proves you control a wallet you want to link.",
+        auth: ["client", "session"],
+        body: { address: "0x2c7536E3605D9C16a7a3D7b1898e529396a65c23", chain_id: 1 },
+        response: {
+          status: 200,
+          body: { message: "Sign siwe_message with the wallet (personal_sign)", siwe_message: "…", expires_at: "…" },
+        },
+      },
+      {
+        method: "POST",
+        path: "/api/v1/account/wallets",
+        summary: "Link the wallet with the signed message.",
+        auth: ["client", "session"],
+        body: { message: "<siwe_message, unchanged>", signature: "0x…" },
+        response: { status: 201, body: { message: "Wallet linked", id: "uuid" } },
+        notes: "A wallet can be linked to one account only (409 otherwise).",
+      },
+      {
+        method: "DELETE",
+        path: "/api/v1/account/wallets/:walletId",
+        summary: "Unlink a wallet.",
+        auth: ["client", "session"],
+        response: { status: 200, body: { message: "Wallet unlinked" } },
+      },
+    ],
+  },
+  {
     id: "clients",
     title: "Clients",
     intro:
@@ -492,7 +562,7 @@ export const ENDPOINT_GROUPS: EndpointGroup[] = [
         path: "/api/v1/clients",
         summary: "Register a client. The secret is shown once.",
         auth: ["owner"],
-        body: { name: "My app", redirect_uri: "https://app.example.com/after-link" },
+        body: { name: "My app", redirect_uri: "https://app.example.com/after-link", siwe_domain: "app.example.com" },
         response: {
           status: 201,
           body: {
@@ -509,13 +579,24 @@ export const ENDPOINT_GROUPS: EndpointGroup[] = [
         auth: ["owner"],
         response: {
           status: 200,
-          body: { clients: [{ client_id: "lxc_…", name: "My app", redirect_uri: "https://…", created_at: "…", updated_at: "…" }] },
+          body: {
+            clients: [
+              {
+                client_id: "lxc_…",
+                name: "My app",
+                redirect_uri: "https://…",
+                siwe_domain: "app.example.com",
+                created_at: "…",
+                updated_at: "…",
+              },
+            ],
+          },
         },
       },
       {
         method: "PATCH",
         path: "/api/v1/clients/:clientId",
-        summary: "Rename a client or change its redirect URI.",
+        summary: "Rename a client or change its redirect URI or wallet sign-in domain.",
         auth: ["owner"],
         body: { name: "Renamed app", redirect_uri: null },
         response: { status: 200, body: { message: "Client updated" } },

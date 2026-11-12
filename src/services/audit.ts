@@ -30,7 +30,10 @@ export type AuditEvent =
   | "team.updated"
   | "team.deleted"
   | "team.member_changed"
-  | "team.member_removed";
+  | "team.member_removed"
+  | "wallet.linked"
+  | "wallet.unlinked"
+  | "wallet.login_failed";
 
 export interface AuditContext {
   accountId?: string | null;
