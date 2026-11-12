@@ -12,6 +12,10 @@ across any number of clients.
   sessions at once, each listable and revocable.
 - **Optional GitHub and GitLab linking.** Leave their variables unset and the server runs
   with email accounts only.
+- **Organizations and teams** with ranked roles, invites, and ownership transfer, plus
+  **zero-trust access checks**: a client asks "does this user hold this role?" and gets only
+  `200` or `403`.
+- **Ethereum wallets.** Link wallets and sign in with Sign-In with Ethereum (EIP-4361).
 - **Undeclared-route guard.** Every URL that is not on the route allowlist — including
   traversal and encoded-path tricks — gets the same `404 {"message":"Not found"}`.
 - **`/api`** serves the usage page, with a dark theme by default and a light-theme toggle.
@@ -68,6 +72,25 @@ When registering an OAuth app with GitHub or GitLab, set its callback URL to
 
 The client secret belongs on a server. Do not ship it in a browser or mobile app.
 
+### Authorization checks
+
+To gate a feature on organization or team membership, call
+`GET /api/v1/organizations/{id}/access?role=admin` (or `/api/v1/teams/{id}/access?role=lead`)
+with the client headers and the user's session. The answer is `200 {"message":"Access granted"}`
+or `403 {"message":"Access denied"}` — nothing about the organization or its members.
+
+### Wallet sign-in
+
+Set the client's `siwe_domain` (for example `app.example.com`), then:
+
+1. `POST /api/v1/auth/wallet/challenge` with `{address, chain_id}` → `siwe_message`.
+2. Have the wallet `personal_sign` that exact message.
+3. `POST /api/v1/auth/wallet/login` with `{message, signature}` →
+   `200 {"message":"Login successful","session_token":"lxa_…"}`.
+
+A wallet must first be linked to an account through `/api/v1/account/wallets/challenge` and
+`POST /api/v1/account/wallets`.
+
 ## Security model
 
 - Passwords are hashed with argon2id. Client secrets, session tokens, and OAuth state are
@@ -85,8 +108,10 @@ The client secret belongs on a server. Do not ship it in a browser or mobile app
   instances.
 - Security events (logins, failures, lockouts, revocations, changes) are written to the
   `audit_events` table.
+- Each organization has exactly one owner, enforced by the database. Invite tokens and wallet
+  challenges are hashed and single use; the server writes every wallet message it will accept.
 
-Known limits in 0.1.0: email addresses are not verified (no mail service yet), so
+Known limits: email addresses are not verified (no mail service yet), so
 registration reports an address that is already taken with `409`.
 
 ## Development

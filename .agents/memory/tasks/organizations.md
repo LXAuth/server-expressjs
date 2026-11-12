@@ -1,7 +1,7 @@
 ---
 name: organizations
 description: Task record for 0.2.0 — profiles, organizations, teams, and Ethereum wallets ported from the unmerged 2026-10-05 stack
-status: in-progress
+status: done
 ---
 
 # Task record — 0.2.0: profiles, organizations, teams, wallets
@@ -58,12 +58,12 @@ be deleted.
 
 | # | Title | Scope | Repository | Branch | Files / areas | PR |
 |---|---|---|---|---|---|---|
-| 1 | Task record | This record | LXAuth/server-expressjs | `plan/organizations` | `.agents/memory/tasks/` | |
-| 2 | Profiles | Handle, display name, avatar | LXAuth/server-expressjs | `feat/profile` | `migrations/0002_*`, `src/services/profile.ts`, routes, docs | |
-| 3 | Organizations | Orgs, members, roles, transfer, invites, access check | LXAuth/server-expressjs | `feat/organization` | `migrations/0003_*`, `src/services/organizations.ts`, routes, docs | |
-| 4 | Teams | Teams, team members, access check | LXAuth/server-expressjs | `feat/team` | `migrations/0004_*`, `src/services/teams.ts`, routes, docs | |
-| 5 | Wallets | SIWE nonce, wallet sign-in, link, unlink | LXAuth/server-expressjs | `feat/wallet` | `migrations/0005_*`, `src/web3/`, routes, docs | |
-| 6 | Release | Version, changelog, README, audit | LXAuth/server-expressjs | `release/0.2.0` | `package.json`, `wiki/logs/0/2/0/`, `README.md` | |
+| 1 | Task record | This record | LXAuth/server-expressjs | `plan/organizations` | `.agents/memory/tasks/` | #8 |
+| 2 | Profiles | Handle, display name, avatar | LXAuth/server-expressjs | `feat/profile` | `migrations/0002_*`, `src/services/profile.ts`, routes, docs | #9 |
+| 3 | Organizations | Orgs, members, roles, transfer, invites, access check | LXAuth/server-expressjs | `feat/organization` | `migrations/0003_*`, `src/services/organizations.ts`, routes, docs | #10 |
+| 4 | Teams | Teams, team members, access check | LXAuth/server-expressjs | `feat/team` | `migrations/0004_*`, `src/services/teams.ts`, routes, docs | #11 |
+| 5 | Wallets | SIWE nonce, wallet sign-in, link, unlink | LXAuth/server-expressjs | `feat/wallet` | `migrations/0005_*`, `src/web3/`, routes, docs | #12 |
+| 6 | Release | Version, changelog, README, audit | LXAuth/server-expressjs | `release/0.2.0` | `package.json`, `wiki/logs/0/2/0/`, `README.md` | #13 |
 
 ## Progress
 
@@ -122,3 +122,10 @@ set `siwe_domain` on create and update.
 
 Also fixed: the test helper now empties every non-seed table, so suites pass on repeat runs
 (the team suite had depended on a fresh database). Next: task 6 releases 0.2.0.
+
+### Task 6 — release/0.2.0
+
+Landed: version `0.2.0`, `wiki/logs/0/2/0/CHANGELOG.md` and `NOTES.md`, the logs index row, and
+README sections for organizations, access checks, and wallet sign-in. `npm outdated` is empty
+and `npm audit` reports 0 vulnerabilities across 267 packages. 90 tests pass, twice in a row on
+the same database. Pull requests open once the owner approves.
