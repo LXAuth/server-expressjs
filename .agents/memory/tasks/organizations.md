@@ -1,7 +1,7 @@
 ---
 name: organizations
 description: Task record for 0.2.0 — profiles, organizations, teams, and Ethereum wallets ported from the unmerged 2026-10-05 stack
-status: in-progress
+status: done
 ---
 
 # Task record — 0.2.0: profiles, organizations, teams, wallets
@@ -122,3 +122,10 @@ set `siwe_domain` on create and update.
 
 Also fixed: the test helper now empties every non-seed table, so suites pass on repeat runs
 (the team suite had depended on a fresh database). Next: task 6 releases 0.2.0.
+
+### Task 6 — release/0.2.0
+
+Landed: version `0.2.0`, `wiki/logs/0/2/0/CHANGELOG.md` and `NOTES.md`, the logs index row, and
+README sections for organizations, access checks, and wallet sign-in. `npm outdated` is empty
+and `npm audit` reports 0 vulnerabilities across 267 packages. 90 tests pass, twice in a row on
+the same database. Pull requests open once the owner approves.
