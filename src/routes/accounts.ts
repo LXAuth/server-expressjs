@@ -10,11 +10,13 @@ import {
   RegisterBody,
   UpdateClientBody,
   UpdateEmailBody,
+  UpdateProfileBody,
   uuidParam,
 } from "../http/validation.js";
 import { authenticate, changePassword, deleteAccount, registerAccount } from "../services/accounts.js";
 import { createClient, listClients, revokeClient, rotateClientSecret, updateClient } from "../services/clients.js";
 import { addEmail, listEmails, removeEmail, updateEmail } from "../services/emails.js";
+import { getProfile, updateProfile } from "../services/profile.js";
 import { createSession, listSessions, revokeOtherSessions, revokeSession } from "../services/sessions.js";
 import { notFound, unauthorized } from "../http/errors.js";
 import { z } from "zod";
@@ -53,6 +55,18 @@ export function registerAccountRoutes({ routes, db, config, rateLimits }: AppCon
     const s = getSession(res);
     await changePassword(db, s.accountId, s.sessionId, body.current_password, body.new_password, req.ip);
     res.status(200).json({ message: "Password changed; other sessions were signed out" });
+  });
+
+  // ---- Profile ------------------------------------------------------------
+
+  routes.add("GET", "/api/v1/account/profile", client, session, async (_req, res) => {
+    res.status(200).json({ profile: await getProfile(db, getSession(res).accountId) });
+  });
+
+  routes.add("PATCH", "/api/v1/account/profile", client, session, async (req, res) => {
+    const body = UpdateProfileBody.parse(req.body);
+    await updateProfile(db, getSession(res).accountId, body);
+    res.status(200).json({ message: "Profile updated" });
   });
 
   // ---- Account emails -----------------------------------------------------
