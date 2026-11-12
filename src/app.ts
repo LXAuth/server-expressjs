@@ -2,6 +2,7 @@ import express, { type Express } from "express";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import type { Config } from "./config.js";
+import type { Db } from "./db/pool.js";
 import { errorHandler, notFound } from "./http/errors.js";
 import { RouteTable } from "./http/route-table.js";
 import { noStore, requireJsonBody } from "./http/security.js";
@@ -9,6 +10,7 @@ import { registerHealthRoutes } from "./routes/health.js";
 
 export interface AppDeps {
   config: Config;
+  db: Db;
   /** Where unexpected errors are reported. Defaults to `console.error`. */
   log?: (err: unknown) => void;
   /** Requests allowed per IP per 15 minutes across the whole API. */
@@ -69,7 +71,7 @@ export function createApp(deps: AppDeps): App {
   // 4. Bodies are small JSON documents, nothing else.
   app.use(requireJsonBody, express.json({ limit: "10kb", strict: true, type: "application/json" }));
 
-  registerHealthRoutes(routes);
+  registerHealthRoutes(routes, deps.db);
 
   app.use(router);
   // A declared path whose handler chose not to answer still gets the generic 404.
