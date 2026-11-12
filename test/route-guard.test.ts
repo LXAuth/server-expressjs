@@ -1,9 +1,12 @@
 import request from "supertest";
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 import { createApp } from "../src/app.js";
-import { testConfig } from "./helpers.js";
+import { createPool } from "../src/db/pool.js";
+import { TEST_DATABASE_URL, testConfig } from "./helpers.js";
 
-const { app } = createApp({ config: testConfig(), log: () => {} });
+const db = createPool(TEST_DATABASE_URL);
+const { app } = createApp({ config: testConfig(), db, log: () => {} });
+afterAll(() => db.end());
 
 describe("undeclared-route guard", () => {
   it("answers a declared route", async () => {

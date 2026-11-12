@@ -15,7 +15,9 @@
     "dev": "tsx watch --env-file-if-exists=.env src/server.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "audit": "npm audit --audit-level=low"
+    "audit": "npm audit --audit-level=low",
+    "migrate": "node dist/migrate.js",
+    "migrate:dev": "tsx --env-file-if-exists=.env src/migrate.ts"
   },
   "dependencies": {
     "argon2": "^0.45.2",

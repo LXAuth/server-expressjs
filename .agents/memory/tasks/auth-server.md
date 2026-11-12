@@ -77,3 +77,13 @@ PostgreSQL 18, helmet headers, `Cache-Control: no-store`, a global per-IP rate l
 10 kB JSON-only body parser, and the `RouteTable` allowlist guard (generic `404` for
 undeclared or malformed URLs, `405` with `Allow` for a wrong method). `GET /api/v1/health`
 is the only route so far. Next: task 3 adds the database.
+
+### Task 3 — feat/database
+
+Landed: `migrations/0001_initial.sql` with all ten tables from the schema above, seed rows
+for `platforms` and `email_types`, `updated_at` triggers, a lowercase-only unique email
+index, one primary email per account, and an advisory-locked migration runner
+(`npm run migrate`, also run automatically on server start). Naming decision:
+`clients.public_id` is the public identifier exposed to callers as `client_id`, so
+`sessions.client_id` can be a plain foreign key to `clients.id`. Next: task 4 builds the
+account, client, login, and session API on these tables.
