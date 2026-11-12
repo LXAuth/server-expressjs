@@ -1,7 +1,7 @@
 ---
 name: project-index
 description: Task record for the 0.2.1 patch — human wiki pages, the .agents index tree, and an AGENTS.md entry point
-status: in progress
+status: done
 ---
 
 # Task record — 0.2.1: wiki and indexes
@@ -33,10 +33,10 @@ human wiki, and every tracked file becomes reachable from one root index, as the
 
 | # | Title | Scope | Repository | Branch | Files / areas | PR |
 |---|---|---|---|---|---|---|
-| 1 | Task record | This record | LXAuth/server-expressjs | `plan/project-index` | `.agents/memory/tasks/` | |
-| 2 | Human wiki | Information pages, README overview | LXAuth/server-expressjs | `docs/wiki` | `wiki/information/`, `README.md` | |
-| 3 | Indexes | Root, wiki, logs, and memory indexes; AGENTS.md | LXAuth/server-expressjs | `docs/index` | `.agents/index/`, `AGENTS.md`, `wiki/logs/` | |
-| 4 | Release | Version, changelog, audit, PR column | LXAuth/server-expressjs | `release/0.2.1` | `package.json`, `wiki/logs/0/2/1/` | |
+| 1 | Task record | This record | LXAuth/server-expressjs | `plan/project-index` | `.agents/memory/tasks/` | #14 |
+| 2 | Human wiki | Information pages, README overview | LXAuth/server-expressjs | `docs/wiki` | `wiki/information/`, `README.md` | #15 |
+| 3 | Indexes | Root, wiki, logs, and memory indexes; AGENTS.md | LXAuth/server-expressjs | `docs/index` | `.agents/index/`, `AGENTS.md`, `wiki/logs/` | #16 |
+| 4 | Release | Version, changelog, audit, PR column | LXAuth/server-expressjs | `release/0.2.1` | `package.json`, `wiki/logs/0/2/1/` | #17 |
 
 ## Progress
 
@@ -59,3 +59,10 @@ agents at the root index. `wiki/logs/logs-index.md` is removed, since an index m
 inside the scope it describes; its rows live in `project-wiki-logs-index.md`. Audit: every link
 resolves, every file under `wiki/` and `.agents/memory/` appears in exactly one index, and no
 `INDEX.md` exists. Next: task 4 releases 0.2.1.
+
+### Task 4 — release/0.2.1
+
+Landed: version `0.2.1`, `wiki/logs/0/2/1/CHANGELOG.md` and `NOTES.md`, their rows in
+`project-wiki-logs-index.md`, and the PR column above. `npm outdated` is empty, `npm audit`
+reports 0 vulnerabilities, and all 90 tests pass. The owner allowed merging the chain in order
+without a further review.

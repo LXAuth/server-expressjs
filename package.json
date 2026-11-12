@@ -1,6 +1,6 @@
 {
   "name": "lxauth-server",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "Zero-trust central account server: one account registry for any number of client applications.",
   "license": "MIT",
