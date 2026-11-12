@@ -54,13 +54,13 @@ their users. One account works across every client the owner or other developers
 
 | # | Title | Scope | Repository | Branch | Files / areas | PR |
 |---|---|---|---|---|---|---|
-| 1 | Task record | This record and `.gitignore` | LXAuth/server-expressjs | `plan/auth-server` | `.agents/memory/tasks/`, `.gitignore` || #1 |
-| 2 | Scaffold | Express 5 + TypeScript, config, security middleware, route guard | LXAuth/server-expressjs | `build/scaffold` | `package.json`, `tsconfig.json`, `src/`, `.env.example`, `docker-compose.yml` || #2 |
-| 3 | Database | Migrations, seeds, migration runner | LXAuth/server-expressjs | `feat/database` | `migrations/`, `src/db/` || #3 |
-| 4 | Accounts | Clients, registration, login, sessions, emails, password | LXAuth/server-expressjs | `feat/account` | `src/routes/`, `src/services/`, `test/` || #4 |
-| 5 | Provider linking | GitHub and GitLab connections | LXAuth/server-expressjs | `feat/oauth-connection` | `src/oauth/`, `src/routes/connections.ts` || #5 |
-| 6 | API page | `/api` usage page, dark and light themes | LXAuth/server-expressjs | `feat/api-docs` | `src/docs/` || #6 |
-| 7 | Release | Version, changelog, audit report, README | LXAuth/server-expressjs | `release/0.1.0` | `package.json`, `wiki/logs/0/1/0/`, `README.md` || #7 |
+| 1 | Task record | This record and `.gitignore` | LXAuth/server-expressjs | `plan/auth-server` | `.agents/memory/tasks/`, `.gitignore` | #1 |
+| 2 | Scaffold | Express 5 + TypeScript, config, security middleware, route guard | LXAuth/server-expressjs | `build/scaffold` | `package.json`, `tsconfig.json`, `src/`, `.env.example`, `docker-compose.yml` | #2 |
+| 3 | Database | Migrations, seeds, migration runner | LXAuth/server-expressjs | `feat/database` | `migrations/`, `src/db/` | #3 |
+| 4 | Accounts | Clients, registration, login, sessions, emails, password | LXAuth/server-expressjs | `feat/account` | `src/routes/`, `src/services/`, `test/` | #4 |
+| 5 | Provider linking | GitHub and GitLab connections | LXAuth/server-expressjs | `feat/oauth-connection` | `src/oauth/`, `src/routes/connections.ts` | #5 |
+| 6 | API page | `/api` usage page, dark and light themes | LXAuth/server-expressjs | `feat/api-docs` | `src/docs/` | #6 |
+| 7 | Release | Version, changelog, audit report, README | LXAuth/server-expressjs | `release/0.1.0` | `package.json`, `wiki/logs/0/1/0/`, `README.md` | #7 |
 
 ## Progress
 
