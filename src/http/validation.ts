@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { notFound } from "./errors.js";
+import { HttpError, notFound } from "./errors.js";
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "../security/passwords.js";
 
 export const emailField = z.string().trim().toLowerCase().pipe(z.email().max(254));
@@ -70,3 +70,33 @@ export const UpdateProfileBody = z
     avatar_url: z.url({ protocol: /^https$/ }).max(2048).nullable().optional(),
   })
   .refine((b) => Object.keys(b).length > 0, "Nothing to update");
+
+export const orgRoleField = z.enum(["owner", "co_owner", "admin", "member", "guest"]);
+
+const slugField = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .regex(/^[a-z0-9](?:[a-z0-9-]{1,48}[a-z0-9])$/, "3–50 characters: a-z, 0-9 or -, not at either end");
+
+export const CreateOrganizationBody = z.strictObject({ slug: slugField, name: z.string().trim().min(1).max(100) });
+export const UpdateOrganizationBody = z
+  .strictObject({ slug: slugField.optional(), name: z.string().trim().min(1).max(100).optional() })
+  .refine((b) => Object.keys(b).length > 0, "Nothing to update");
+export const ChangeRoleBody = z.strictObject({ role: orgRoleField });
+export const TransferBody = z.strictObject({ account_id: z.uuid() });
+export const CreateInviteBody = z.strictObject({
+  role: orgRoleField.default("member"),
+  email: emailField.optional(),
+  expires_in_hours: z.number().int().min(1).max(24 * 30).default(24 * 7),
+});
+export const AcceptInviteBody = z.strictObject({ invite_token: z.string().min(1).max(128) });
+
+/** `?role=` on access checks. Absent means any membership at all. */
+export function accessRoleQuery<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T {
+  if (value === undefined) return fallback;
+  if (typeof value !== "string" || !(allowed as readonly string[]).includes(value)) {
+    throw new HttpError(400, `role must be one of: ${allowed.join(", ")}`);
+  }
+  return value as T;
+}

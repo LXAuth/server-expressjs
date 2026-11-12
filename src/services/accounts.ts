@@ -3,6 +3,7 @@ import { transaction, type Db } from "../db/pool.js";
 import { HttpError } from "../http/errors.js";
 import { burnPasswordCheck, hashPassword, needsRehash, verifyPassword } from "../security/passwords.js";
 import { audit } from "./audit.js";
+import { ownedOrganizationCount } from "./organizations.js";
 
 const UNIQUE_VIOLATION = "23505";
 
@@ -142,6 +143,10 @@ export async function changePassword(
 /** Permanently deletes an account and everything that belongs to it. */
 export async function deleteAccount(db: Db, accountId: string, password: string, ip?: string): Promise<void> {
   await checkCurrentPassword(db, accountId, password);
+  // Deleting an owner would leave an organization with nobody in charge.
+  if ((await ownedOrganizationCount(db, accountId)) > 0) {
+    throw new HttpError(409, "Transfer or delete the organizations you own first");
+  }
   await transaction(db, async (tx) => {
     await tx.query("DELETE FROM accounts WHERE id = $1", [accountId]);
     await audit(tx, "account.deleted", { accountId: null, ip });

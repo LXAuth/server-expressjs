@@ -79,3 +79,19 @@ Landed: `migrations/0002_profile.sql` adds `name_id` (unique, lowercase, 3–50 
 to `account_property`. `GET` and `PATCH /api/v1/account/profile` read and update them, with
 `null` clearing a field. A shared `test/harness.ts` now creates a client and logged-in users
 for the 0.2.0 suites. Next: task 3 adds organizations.
+
+### Task 3 — feat/organization
+
+Landed: `migrations/0003_organizations.sql` (`organizations`, `organization_members` with a
+partial unique index for one owner, `organization_invites` with hashed single-use tokens and
+an optional email restriction). Endpoints under `/api/v1/organizations` for create, list,
+read, update, delete, members, role changes, removal and leaving, ownership transfer, and
+invites, plus `POST /api/v1/invites/accept`. The zero-trust check
+`GET /api/v1/organizations/{id}/access?role=` returns only `200 Access granted` or
+`403 Access denied`, the same for a missing organization. Non-members get `404` elsewhere;
+members see each other by profile, never by email; guests cannot list members. An account
+that owns an organization cannot be deleted until it transfers or deletes it.
+
+Rules chosen: role changes need admin or above and a rank above both the member's current and
+new role (the owner may appoint co-owners); invites follow the same ceiling. Next: task 4
+adds teams.
