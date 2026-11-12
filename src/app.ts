@@ -1,11 +1,13 @@
 import express, { type Express } from "express";
 import helmet from "helmet";
-import { rateLimit } from "express-rate-limit";
 import type { Config } from "./config.js";
 import type { Db } from "./db/pool.js";
 import { errorHandler, notFound } from "./http/errors.js";
+import { DEFAULT_RATE_LIMITS, limiter, type RateLimits } from "./http/rate-limit.js";
 import { RouteTable } from "./http/route-table.js";
 import { noStore, requireJsonBody } from "./http/security.js";
+import { registerAccountRoutes } from "./routes/accounts.js";
+import type { AppContext } from "./routes/context.js";
 import { registerHealthRoutes } from "./routes/health.js";
 
 export interface AppDeps {
@@ -13,8 +15,8 @@ export interface AppDeps {
   db: Db;
   /** Where unexpected errors are reported. Defaults to `console.error`. */
   log?: (err: unknown) => void;
-  /** Requests allowed per IP per 15 minutes across the whole API. */
-  globalRateLimit?: number;
+  /** Per-IP request limits. Defaults to `DEFAULT_RATE_LIMITS`. */
+  rateLimits?: Partial<RateLimits>;
 }
 
 export interface App {
@@ -58,20 +60,15 @@ export function createApp(deps: AppDeps): App {
   app.use(noStore);
 
   // 3. Coarse per-IP limit. Sensitive routes add their own, tighter limits.
-  app.use(
-    rateLimit({
-      windowMs: 15 * 60 * 1000,
-      limit: deps.globalRateLimit ?? 600,
-      standardHeaders: "draft-8",
-      legacyHeaders: false,
-      message: { message: "Too many requests" },
-    }),
-  );
+  const rateLimits: RateLimits = { ...DEFAULT_RATE_LIMITS, ...deps.rateLimits };
+  app.use(limiter(rateLimits.global, 15 * 60 * 1000));
 
   // 4. Bodies are small JSON documents, nothing else.
   app.use(requireJsonBody, express.json({ limit: "10kb", strict: true, type: "application/json" }));
 
+  const ctx: AppContext = { routes, db: deps.db, config, rateLimits };
   registerHealthRoutes(routes, deps.db);
+  registerAccountRoutes(ctx);
 
   app.use(router);
   // A declared path whose handler chose not to answer still gets the generic 404.

@@ -87,3 +87,18 @@ index, one primary email per account, and an advisory-locked migration runner
 `clients.public_id` is the public identifier exposed to callers as `client_id`, so
 `sessions.client_id` can be a plain foreign key to `clients.id`. Next: task 4 builds the
 account, client, login, and session API on these tables.
+
+### Task 4 — feat/account
+
+Landed: account registration, developer-owned clients (create, list, rename, rotate secret,
+revoke — managed with HTTP Basic email and password), login through a client
+(`X-Client-Id` / `X-Client-Secret`) returning only `{message, session_token}`, session check,
+logout, session listing and revocation, a per-account session cap that evicts the least
+recently used session, email management with purposes and a `login_enabled` flag,
+password change (signs out other sessions), and account deletion. Failed logins are
+indistinguishable (same body, dummy argon2 check for unknown emails) and lock the account
+after `LOGIN_MAX_ATTEMPTS`. Every security event is written to `audit_events`.
+
+Decision: registration answers `409` for an address already in use. Hiding that needs email
+verification, which needs an outbound mail service that is out of scope for 0.1.0; the
+endpoint is rate limited instead. Next: task 5 adds GitHub and GitLab linking.
