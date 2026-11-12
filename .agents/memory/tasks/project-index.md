@@ -50,3 +50,12 @@ Landed: five human pages under `wiki/information/` — getting started, configur
 integration, security model, and development — holding the facts that were in the README,
 plus migrations, proxy setup, provider linking, and adding an endpoint. `README.md` is now an
 overview with a quick start and a table of those pages. Next: task 3 adds the indexes.
+
+### Task 3 — docs/index
+
+Landed: `.agents/index/` with `root-index.md`, `memory-index.md`, `project-wiki-index.md`, and
+`project-wiki-logs-index.md`, all on the canonical template, plus a root `AGENTS.md` that points
+agents at the root index. `wiki/logs/logs-index.md` is removed, since an index may not sit
+inside the scope it describes; its rows live in `project-wiki-logs-index.md`. Audit: every link
+resolves, every file under `wiki/` and `.agents/memory/` appears in exactly one index, and no
+`INDEX.md` exists. Next: task 4 releases 0.2.1.
