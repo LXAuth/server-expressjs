@@ -343,6 +343,98 @@ export const ENDPOINT_GROUPS: EndpointGroup[] = [
     ],
   },
   {
+    id: "teams",
+    title: "Teams",
+    intro:
+      "Teams group members of one organization, with two roles: lead and member. Organization owners, co-owners, and admins manage every team; a lead manages the plain members of their own team. Leaving or being removed from the organization also removes you from its teams. Guests only see the teams they are on.",
+    endpoints: [
+      {
+        method: "GET",
+        path: "/api/v1/teams/:teamId/access",
+        summary: "Zero-trust check: is the current user on this team, with at least this role?",
+        auth: ["client", "session"],
+        response: { status: 200, body: { message: "Access granted" } },
+        notes:
+          "Pass ?role=lead|member (default member). Organization owners, co-owners, and admins always pass. Otherwise 403 {\"message\":\"Access denied\"}, including for a team that does not exist.",
+      },
+      {
+        method: "POST",
+        path: "/api/v1/organizations/:orgId/teams",
+        summary: "Create a team. Organization admin or above.",
+        auth: ["client", "session"],
+        body: { name: "Platform", description: "Runs the shared services" },
+        response: { status: 201, body: { message: "Team created", id: "uuid" } },
+      },
+      {
+        method: "GET",
+        path: "/api/v1/organizations/:orgId/teams",
+        summary: "List an organization's teams, with your role in each (null if you are not on it).",
+        auth: ["client", "session"],
+        response: {
+          status: 200,
+          body: {
+            teams: [
+              { id: "uuid", organization_id: "uuid", name: "Platform", description: null, role: "lead", created_at: "…" },
+            ],
+          },
+        },
+      },
+      {
+        method: "GET",
+        path: "/api/v1/teams/:teamId",
+        summary: "Read one team.",
+        auth: ["client", "session"],
+        response: {
+          status: 200,
+          body: { team: { id: "uuid", organization_id: "uuid", name: "Platform", description: null, role: null, created_at: "…" } },
+        },
+      },
+      {
+        method: "PATCH",
+        path: "/api/v1/teams/:teamId",
+        summary: "Rename a team or change its description. Organization admin or team lead.",
+        auth: ["client", "session"],
+        body: { description: "Owns CI and the API gateway" },
+        response: { status: 200, body: { message: "Team updated" } },
+      },
+      {
+        method: "DELETE",
+        path: "/api/v1/teams/:teamId",
+        summary: "Delete a team. Organization admin or above.",
+        auth: ["client", "session"],
+        response: { status: 200, body: { message: "Team deleted" } },
+      },
+      {
+        method: "GET",
+        path: "/api/v1/teams/:teamId/members",
+        summary: "List team members by profile and role.",
+        auth: ["client", "session"],
+        response: {
+          status: 200,
+          body: {
+            members: [{ account_id: "uuid", name_id: "ada", name_display: "Ada", avatar_url: null, role: "lead", joined_at: "…" }],
+          },
+        },
+      },
+      {
+        method: "PUT",
+        path: "/api/v1/teams/:teamId/members/:accountId",
+        summary: "Add an organization member to the team, or change their team role.",
+        auth: ["client", "session"],
+        body: { role: "member" },
+        response: { status: 201, body: { message: "Member added" } },
+        notes: "201 when added, 200 when the role changed. Leads can add and manage plain members only; organization admins can set leads.",
+      },
+      {
+        method: "DELETE",
+        path: "/api/v1/teams/:teamId/members/:accountId",
+        summary: "Remove someone from the team, or leave it with your own account id.",
+        auth: ["client", "session"],
+        response: { status: 200, body: { message: "Member removed" } },
+      },
+    ],
+  },
+  {
     id: "connections",
     title: "GitHub and GitLab",
     intro:

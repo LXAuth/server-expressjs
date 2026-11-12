@@ -95,3 +95,14 @@ that owns an organization cannot be deleted until it transfers or deletes it.
 Rules chosen: role changes need admin or above and a rank above both the member's current and
 new role (the owner may appoint co-owners); invites follow the same ceiling. Next: task 4
 adds teams.
+
+### Task 4 — feat/team
+
+Landed: `migrations/0004_teams.sql` (`teams` with names unique per organization,
+`team_members` with `lead`/`member` roles). A composite foreign key to
+`organization_members` means only organization members can join a team, and leaving the
+organization removes its team memberships automatically. Endpoints: create and list under
+`/api/v1/organizations/{id}/teams`; read, update, delete, members, and the zero-trust
+`GET /api/v1/teams/{id}/access?role=lead|member` under `/api/v1/teams`. Organization owners,
+co-owners, and admins manage and pass access for every team; leads manage plain members;
+guests see only their own teams. Next: task 5 adds wallets.

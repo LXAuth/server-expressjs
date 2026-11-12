@@ -25,7 +25,12 @@ export type AuditEvent =
   | "organization.ownership_transferred"
   | "organization.invite_created"
   | "organization.invite_revoked"
-  | "organization.invite_accepted";
+  | "organization.invite_accepted"
+  | "team.created"
+  | "team.updated"
+  | "team.deleted"
+  | "team.member_changed"
+  | "team.member_removed";
 
 export interface AuditContext {
   accountId?: string | null;

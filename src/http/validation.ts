@@ -100,3 +100,15 @@ export function accessRoleQuery<T extends string>(value: unknown, allowed: reado
   }
   return value as T;
 }
+
+export const CreateTeamBody = z.strictObject({
+  name: z.string().trim().min(1).max(100),
+  description: z.string().trim().max(500).nullable().optional(),
+});
+export const UpdateTeamBody = z
+  .strictObject({
+    name: z.string().trim().min(1).max(100).optional(),
+    description: z.string().trim().max(500).nullable().optional(),
+  })
+  .refine((b) => Object.keys(b).length > 0, "Nothing to update");
+export const PutTeamMemberBody = z.strictObject({ role: z.enum(["lead", "member"]).default("member") });
