@@ -10,6 +10,7 @@ import type { Fetch } from "./oauth/providers.js";
 import { registerAccountRoutes } from "./routes/accounts.js";
 import { registerConnectionRoutes } from "./routes/connections.js";
 import { registerDocsRoutes } from "./routes/docs.js";
+import { registerOrganizationRoutes } from "./routes/organizations.js";
 import type { AppContext } from "./routes/context.js";
 import { registerHealthRoutes } from "./routes/health.js";
 
@@ -75,6 +76,7 @@ export function createApp(deps: AppDeps): App {
   registerHealthRoutes(routes, deps.db);
   registerAccountRoutes(ctx);
   registerConnectionRoutes(ctx);
+  registerOrganizationRoutes(ctx);
   registerDocsRoutes(ctx);
 
   app.use(router);

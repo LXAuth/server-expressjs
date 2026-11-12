@@ -16,7 +16,16 @@ export type AuditEvent =
   | "client.secret_rotated"
   | "client.revoked"
   | "connection.linked"
-  | "connection.unlinked";
+  | "connection.unlinked"
+  | "organization.created"
+  | "organization.updated"
+  | "organization.deleted"
+  | "organization.member_role_changed"
+  | "organization.member_removed"
+  | "organization.ownership_transferred"
+  | "organization.invite_created"
+  | "organization.invite_revoked"
+  | "organization.invite_accepted";
 
 export interface AuditContext {
   accountId?: string | null;
