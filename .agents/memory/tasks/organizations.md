@@ -106,3 +106,19 @@ organization removes its team memberships automatically. Endpoints: create and l
 `GET /api/v1/teams/{id}/access?role=lead|member` under `/api/v1/teams`. Organization owners,
 co-owners, and admins manage and pass access for every team; leads manage plain members;
 guests see only their own teams. Next: task 5 adds wallets.
+
+### Task 5 — feat/wallet
+
+Landed: `migrations/0005_wallets.sql` (`ethereum` platform, `clients.siwe_domain`,
+`wallets`, `wallet_challenges`). Sign-In with Ethereum: the server writes the exact EIP-4361
+message (client's domain, EIP-55 address, chain id, nonce, 10-minute expiry) and stores
+only its hash; a signature is accepted once, from the same client (and, for linking, the same
+session). Recovery uses `@noble/curves` secp256k1 and `@noble/hashes` keccak-256, rejects
+high-S signatures, and is cross-checked against `viem` (dev dependency) in the tests.
+Endpoints: `POST /api/v1/auth/wallet/challenge` and `/login` (uniform `401` on any failure;
+challenges are issued for unlinked addresses too), and `GET`/`POST /api/v1/account/wallets`,
+`POST /api/v1/account/wallets/challenge`, `DELETE /api/v1/account/wallets/{id}`. Clients can
+set `siwe_domain` on create and update.
+
+Also fixed: the test helper now empties every non-seed table, so suites pass on repeat runs
+(the team suite had depended on a fresh database). Next: task 6 releases 0.2.0.

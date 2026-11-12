@@ -22,6 +22,7 @@ describe("migrations", () => {
       { code_system: "email", code_display: "Email" },
       { code_system: "github", code_display: "GitHub" },
       { code_system: "gitlab", code_display: "GitLab" },
+      { code_system: "ethereum", code_display: "Ethereum" },
     ]);
     const types = await db.query("SELECT code FROM email_types ORDER BY code");
     expect(types.rows.map((r) => r.code)).toEqual(["notification", "other", "primary", "receipt", "recovery"]);
